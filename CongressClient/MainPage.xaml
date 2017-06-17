@@ -34,7 +34,10 @@
                 </ListView.ItemsPanel>
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="local:DocItem">
-                        <TextBlock Text="{x:Bind File.DisplayName}"/>
+                        <StackPanel>
+                            <Image Source="{x:Bind Preview}"/>
+                            <TextBlock Text="{x:Bind Label}"/>
+                        </StackPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
