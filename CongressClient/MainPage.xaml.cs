@@ -116,24 +116,31 @@ namespace CongressClient
       return _pdfDocument;
     }
 
+    private Size scaleSizeDown(Size size, double maxHeight = 100, double maxWidth = 100)
+    {
+      var ratioWidth = maxWidth / size.Width;
+      var ratioHeight = maxHeight / size.Height;
+      var ratioScale = Math.Min(ratioWidth, ratioHeight);
+
+      var aspectHeight = ratioScale * size.Height;
+      var aspectWidth = ratioScale * size.Width;
+
+      return new Size(aspectWidth, aspectHeight);
+    }
+
     private async Task<InMemoryRandomAccessStream> resizeImageStream(IRandomAccessStream stream, int maxHeight = 100, int maxWidth = 100)
     {
       var result = new InMemoryRandomAccessStream();
       if (stream.Size > 0)
       {
         BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
-
         BitmapEncoder encoder = await BitmapEncoder.CreateForTranscodingAsync(result, decoder);
-        var ratioWidth = (double)maxWidth / decoder.PixelWidth;
-        var ratioHeight = (double)maxHeight / decoder.PixelHeight;
-        var ratioScale = Math.Min(ratioWidth, ratioHeight);
-
-        var aspectHeight = (uint)(ratioScale * decoder.PixelHeight);
-        var aspectWidth = (uint)(ratioScale * decoder.PixelWidth);
 
         //encoder.BitmapTransform.InterpolationMode = BitmapInterpolationMode.Linear;
-        encoder.BitmapTransform.ScaledHeight = aspectHeight;
-        encoder.BitmapTransform.ScaledWidth = aspectWidth;
+
+        var size = scaleSizeDown(new Size(decoder.PixelHeight, decoder.PixelWidth));
+        encoder.BitmapTransform.ScaledHeight = (uint)size.Height;
+        encoder.BitmapTransform.ScaledWidth = (uint)size.Width;
         await encoder.FlushAsync();
 
         result.Seek(0); // ???
@@ -151,8 +158,16 @@ namespace CongressClient
         doc.Label = string.Format("PDF {0} pages", _pdfDocument.PageCount);
         using (var page = _pdfDocument.GetPage(0))
         {
+          uint qualityRatio = 1;
+          var options = new PdfPageRenderOptions
+          {
+            DestinationHeight = (uint)page.Size.Height * qualityRatio,
+            DestinationWidth = (uint)page.Size.Width * qualityRatio,
+            BitmapEncoderId = BitmapEncoder.JpegXREncoderId
+          };
+
           var stream = new InMemoryRandomAccessStream();
-          await page.RenderToStreamAsync(stream);
+          await page.RenderToStreamAsync(stream, options);
           stream = await resizeImageStream(stream);
           await doc.Preview.SetSourceAsync(stream);
         }
@@ -210,7 +225,14 @@ namespace CongressClient
             var bitmapImage = new BitmapImage();
             using (var bmpStream = new InMemoryRandomAccessStream())
             {
-              await page.RenderToStreamAsync(bmpStream);
+              var qualityRatio = 1.5;
+              var options = new PdfPageRenderOptions
+              {
+                DestinationHeight = (uint)(page.Size.Height * qualityRatio),
+                DestinationWidth = (uint)(page.Size.Width * qualityRatio),
+                BitmapEncoderId = BitmapEncoder.PngEncoderId
+              };
+              await page.RenderToStreamAsync(bmpStream, options);
               await bitmapImage.SetSourceAsync(bmpStream);
             }
             resultList.Add(bitmapImage);
