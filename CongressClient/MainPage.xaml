@@ -17,8 +17,27 @@
             <FlipView Grid.Row="0">
                 
             </FlipView>
-            
-            
+
+            <ListView 
+                Grid.Row="1"
+                ScrollViewer.VerticalScrollBarVisibility="Disabled" 
+                ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                ScrollViewer.HorizontalScrollMode="Enabled"                  
+                ScrollViewer.VerticalScrollMode="Disabled"
+                ItemsSource="{x:Bind documents}">
+                <ListView.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel 
+                            Background="Transparent" 
+                            Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ListView.ItemsPanel>
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="local:DocItem">
+                        <TextBlock Text="{x:Bind File.DisplayName}"/>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
         </Grid>
     </Grid>
 </Page>

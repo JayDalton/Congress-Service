@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -26,11 +27,8 @@ namespace CongressClient
   /// </summary>
   public sealed partial class MainPage : Page
   {
-
     private const string filePath = "c:/Temp/";
-    private List<StorageFile> documents;
-
-    private List<string> contentTypes = new List<string>() { /*"application/pdf",*/ "image/png", "image/jpeg" };
+    private ObservableCollection<DocItem> documents;
 
     const int WrongPassword = unchecked((int)0x8007052b); // HRESULT_FROM_WIN32(ERROR_WRONG_PASSWORD)
     const int GenericFail = unchecked((int)0x80004005);   // E_FAIL
@@ -38,7 +36,7 @@ namespace CongressClient
     public MainPage()
     {
       this.InitializeComponent();
-      documents = new List<StorageFile>();
+      documents = new ObservableCollection<DocItem>();
     }
 
     private async void Page_Loaded(object sender, RoutedEventArgs e)
@@ -50,20 +48,24 @@ namespace CongressClient
       StorageFolder folder = await folderPicker.PickSingleFolderAsync();
       if (folder != null)
       {
+        var contentTypes = new List<string>() { "application/pdf", "image/png", "image/jpeg" };
         IReadOnlyList<StorageFile> fileList = await folder.GetFilesAsync();
         foreach (var file in fileList)
         {
           if (contentTypes.Contains(file.ContentType))
           {
-            documents.Add(file);
+            await Task.Delay(500);
+            var doc = new DocItem() { File = file };
+            documents.Add(doc);
           }
         }
       }
     }
   }
 
-  public class PresenterItem
+  public class DocItem
   {
+    public StorageFile File { get; set; }
     public string Label { get; set; }
     public PresenterItemType Type { get; set; }
     public byte[] Content { get; set; }
