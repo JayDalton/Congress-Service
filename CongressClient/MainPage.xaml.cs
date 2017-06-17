@@ -33,6 +33,7 @@ namespace CongressClient
   {
     private const string filePath = "c:/Temp/";
     private ObservableCollection<DocItem> documents;
+    private ObservableCollection<DocFlip> docContent;
 
     const int WrongPassword = unchecked((int)0x8007052b); // HRESULT_FROM_WIN32(ERROR_WRONG_PASSWORD)
     const int GenericFail = unchecked((int)0x80004005);   // E_FAIL
@@ -41,6 +42,7 @@ namespace CongressClient
     {
       this.InitializeComponent();
       documents = new ObservableCollection<DocItem>();
+      docContent = new ObservableCollection<DocFlip>();
     }
 
     private async void Page_Loaded(object sender, RoutedEventArgs e)
@@ -72,7 +74,9 @@ namespace CongressClient
 
     private async Task<DocItem> loadStorageFileBitmapAsync(StorageFile file)
     {
-      var doc = new DocItem() { Label = file.DisplayType, File = file, Preview = new BitmapImage() };
+      var doc = new DocItem() { File = file, Preview = new BitmapImage() };
+      doc.Type = DocItemType.Image;
+      doc.Label = file.DisplayType;
 
       var thumbnail = await file.GetThumbnailAsync(
         ThumbnailMode.PicturesView, 100,
@@ -117,7 +121,6 @@ namespace CongressClient
       var result = new InMemoryRandomAccessStream();
       if (stream.Size > 0)
       {
-        // scaling result
         BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
 
         BitmapEncoder encoder = await BitmapEncoder.CreateForTranscodingAsync(result, decoder);
@@ -133,22 +136,14 @@ namespace CongressClient
         encoder.BitmapTransform.ScaledWidth = aspectWidth;
         await encoder.FlushAsync();
 
-        result.Seek(0);
-
-        // write result to preview
-        //This.Preview = new byte[result.Size];
-        //using (var reader = new DataReader(result.GetInputStreamAt(0)))
-        //{
-        //  await reader.LoadAsync((uint)result.Size);
-        //  reader.ReadBytes(This.Preview);
-        //}
+        result.Seek(0); // ???
       }
       return result;
     }
 
     private async Task<DocItem> loadStorageFileDocumentAsync(StorageFile file)
     {
-      var doc = new DocItem() { File = file, Preview = new BitmapImage() };
+      var doc = new DocItem() { File = file, Preview = new BitmapImage(), Type = DocItemType.Document };
       PdfDocument _pdfDocument = await loadStorageFilePdfAsync(file);
 
       if (_pdfDocument != null)
@@ -171,6 +166,74 @@ namespace CongressClient
 
       return doc;
     }
+
+    private async Task loadItemView(DocItem item)
+    {
+      docContent.Clear();
+      switch (item.Type)
+      {
+        case DocItemType.Image:
+          break;
+        case DocItemType.Document:
+          var pages = await loadDocumentPages(item);
+          foreach (var page in pages)
+          {
+            docContent.Add(page);
+          }
+          break;
+      }
+    }
+
+    private async Task<IEnumerable<DocFlip>> loadDocumentPages(DocItem item)
+    {
+      var resultList = new List<DocFlip>();
+      var pdfDocument = await loadStorageFilePdfAsync(item.File);
+      if (pdfDocument != null)
+      {
+        var PageIndex = default(uint);
+        var PageCount = pdfDocument.PageCount;
+        for (uint idx = 0; idx < PageCount; idx++)
+        {
+          using (var page = pdfDocument.GetPage(idx))
+          {
+            var bitmapImage = new BitmapImage();
+            using (var bmpStream = new InMemoryRandomAccessStream())
+            {
+              await page.RenderToStreamAsync(bmpStream);
+              await bitmapImage.SetSourceAsync(bmpStream);
+            }
+
+            resultList.Add(
+              new DocFlip
+              {
+                Index = idx,
+                Image = bitmapImage
+              }
+            );
+          }
+        }
+      }
+      return resultList;
+    }
+
+    private async void DocumentListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+      if (sender is ListView)
+      {
+        var docList = sender as ListView;
+        if (docList.SelectedItem != null)
+        {
+          var doc = docList.SelectedItem as DocItem;
+          await loadItemView(doc);
+        }
+      }
+    }
+  }
+
+  public class DocFlip
+  {
+    public uint Index { get; set; }
+    public BitmapImage Image { get; set; }
   }
 
   public class DocItem
