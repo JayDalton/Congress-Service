@@ -22,13 +22,13 @@
                     </ItemsPanelTemplate>
                 </FlipView.ItemsPanel>
                 <FlipView.ItemTemplate>
-                    <DataTemplate x:DataType="local:DocFlip">
+                    <DataTemplate x:DataType="BitmapImage">
                         <ScrollViewer ZoomMode="Enabled"
                             HorizontalScrollBarVisibility="Auto"
                             VerticalScrollBarVisibility="Auto" 
                             HorizontalScrollMode="Enabled"
                             VerticalScrollMode="Enabled">
-                            <Image Source="{x:Bind Image}" Stretch="Uniform"/>
+                            <Image Source="{x:Bind}" Stretch="Uniform"/>
                         </ScrollViewer>
                     </DataTemplate>
                 </FlipView.ItemTemplate>

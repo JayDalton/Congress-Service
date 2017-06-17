@@ -33,7 +33,7 @@ namespace CongressClient
   {
     private const string filePath = "c:/Temp/";
     private ObservableCollection<DocItem> documents;
-    private ObservableCollection<DocFlip> docContent;
+    private ObservableCollection<BitmapImage> docContent;
 
     const int WrongPassword = unchecked((int)0x8007052b); // HRESULT_FROM_WIN32(ERROR_WRONG_PASSWORD)
     const int GenericFail = unchecked((int)0x80004005);   // E_FAIL
@@ -42,7 +42,7 @@ namespace CongressClient
     {
       this.InitializeComponent();
       documents = new ObservableCollection<DocItem>();
-      docContent = new ObservableCollection<DocFlip>();
+      docContent = new ObservableCollection<BitmapImage>();
     }
 
     private async void Page_Loaded(object sender, RoutedEventArgs e)
@@ -173,6 +173,8 @@ namespace CongressClient
       switch (item.Type)
       {
         case DocItemType.Image:
+          var image = await loadImageBitmapImage(item);
+          docContent.Add(image);
           break;
         case DocItemType.Document:
           var pages = await loadDocumentPages(item);
@@ -184,13 +186,22 @@ namespace CongressClient
       }
     }
 
-    private async Task<IEnumerable<DocFlip>> loadDocumentPages(DocItem item)
+    private async Task<BitmapImage> loadImageBitmapImage(DocItem item)
     {
-      var resultList = new List<DocFlip>();
+      var resultImage = new BitmapImage();
+      using (var stream = await item.File.OpenAsync(FileAccessMode.Read))
+      {
+        await resultImage.SetSourceAsync(stream);
+      }
+      return resultImage;
+    }
+
+    private async Task<IEnumerable<BitmapImage>> loadDocumentPages(DocItem item)
+    {
+      var resultList = new List<BitmapImage>();
       var pdfDocument = await loadStorageFilePdfAsync(item.File);
       if (pdfDocument != null)
       {
-        var PageIndex = default(uint);
         var PageCount = pdfDocument.PageCount;
         for (uint idx = 0; idx < PageCount; idx++)
         {
@@ -202,14 +213,7 @@ namespace CongressClient
               await page.RenderToStreamAsync(bmpStream);
               await bitmapImage.SetSourceAsync(bmpStream);
             }
-
-            resultList.Add(
-              new DocFlip
-              {
-                Index = idx,
-                Image = bitmapImage
-              }
-            );
+            resultList.Add(bitmapImage);
           }
         }
       }
