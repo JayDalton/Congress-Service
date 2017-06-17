@@ -34,6 +34,8 @@
                 </FlipView.ItemTemplate>
             </FlipView>
 
+            <ProgressRing x:Name="Progress" Grid.Row="0"/>
+
             <ListView 
                 Grid.Row="1" x:Name="DocumentListView"
                 SelectionChanged="DocumentListView_SelectionChanged"

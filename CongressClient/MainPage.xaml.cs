@@ -31,12 +31,8 @@ namespace CongressClient
   /// </summary>
   public sealed partial class MainPage : Page
   {
-    private const string filePath = "c:/Temp/";
     private ObservableCollection<DocItem> documents;
     private ObservableCollection<BitmapImage> docContent;
-
-    const int WrongPassword = unchecked((int)0x8007052b); // HRESULT_FROM_WIN32(ERROR_WRONG_PASSWORD)
-    const int GenericFail = unchecked((int)0x80004005);   // E_FAIL
 
     public MainPage()
     {
@@ -57,7 +53,6 @@ namespace CongressClient
         var fileList = await folder.GetFilesAsync();
         foreach (var file in fileList)
         {
-          await Task.Delay(500);
           switch (file.ContentType)
           {
             case "image/png":
@@ -90,6 +85,9 @@ namespace CongressClient
     private async Task<PdfDocument> loadStorageFilePdfAsync(StorageFile file)
     {
       PdfDocument _pdfDocument;
+      const int WrongPassword = unchecked((int)0x8007052b); // HRESULT_FROM_WIN32(ERROR_WRONG_PASSWORD)
+      const int GenericFail = unchecked((int)0x80004005);   // E_FAIL
+
       try
       {
         _pdfDocument = await PdfDocument.LoadFromFileAsync(file);
@@ -184,6 +182,9 @@ namespace CongressClient
 
     private async Task loadItemView(DocItem item)
     {
+      Progress.IsActive = true;
+      Progress.Visibility = Visibility.Visible;
+
       docContent.Clear();
       switch (item.Type)
       {
@@ -199,6 +200,9 @@ namespace CongressClient
           }
           break;
       }
+
+      Progress.IsActive = false;
+      Progress.Visibility = Visibility.Collapsed;
     }
 
     private async Task<BitmapImage> loadImageBitmapImage(DocItem item)
