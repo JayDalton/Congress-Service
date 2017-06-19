@@ -14,52 +14,70 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <FlipView 
-                Grid.Row="0" ItemsSource="{x:Bind docContent, Mode=OneWay}">
-                <FlipView.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal" AreScrollSnapPointsRegular="True"/>
-                    </ItemsPanelTemplate>
-                </FlipView.ItemsPanel>
-                <FlipView.ItemTemplate>
-                    <DataTemplate x:DataType="BitmapImage">
-                        <ScrollViewer ZoomMode="Enabled"
-                            HorizontalScrollBarVisibility="Auto"
-                            VerticalScrollBarVisibility="Auto" 
-                            HorizontalScrollMode="Enabled"
-                            VerticalScrollMode="Enabled">
-                            <Image Source="{x:Bind}" Stretch="Uniform"/>
-                        </ScrollViewer>
-                    </DataTemplate>
-                </FlipView.ItemTemplate>
-            </FlipView>
+            <Grid Grid.Row="0">
+                <FlipView ItemsSource="{x:Bind docContent, Mode=OneWay}">
+                    <FlipView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" AreScrollSnapPointsRegular="True"/>
+                        </ItemsPanelTemplate>
+                    </FlipView.ItemsPanel>
+                    <FlipView.ItemTemplate>
+                        <DataTemplate x:DataType="BitmapImage">
+                            <ScrollViewer ZoomMode="Enabled"
+                                HorizontalScrollBarVisibility="Auto"
+                                VerticalScrollBarVisibility="Auto" 
+                                HorizontalScrollMode="Enabled"
+                                VerticalScrollMode="Enabled">
+                                <Image Source="{x:Bind}" Stretch="Uniform"/>
+                            </ScrollViewer>
+                        </DataTemplate>
+                    </FlipView.ItemTemplate>
+                </FlipView>
+               <ProgressRing x:Name="Progress" Grid.Row="0" Width="50" Height="50"/>
+            </Grid>
 
-            <ProgressRing x:Name="Progress" Grid.Row="0"/>
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <ListView 
+                    Grid.Column="0" x:Name="DocumentListView"
+                    SelectionChanged="DocumentListView_SelectionChanged"
+                    ScrollViewer.VerticalScrollBarVisibility="Disabled" 
+                    ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                    ScrollViewer.HorizontalScrollMode="Enabled"                  
+                    ScrollViewer.VerticalScrollMode="Disabled"
+                    ItemsSource="{x:Bind documents, Mode=OneWay}">
+                    <ListView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel 
+                                Background="Transparent" 
+                                Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ListView.ItemsPanel>
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="local:DocItem">
+                            <StackPanel>
+                                <Image Source="{x:Bind Preview}"/>
+                                <TextBlock Text="{x:Bind Label}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
 
-            <ListView 
-                Grid.Row="1" x:Name="DocumentListView"
-                SelectionChanged="DocumentListView_SelectionChanged"
-                ScrollViewer.VerticalScrollBarVisibility="Disabled" 
-                ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                ScrollViewer.HorizontalScrollMode="Enabled"                  
-                ScrollViewer.VerticalScrollMode="Disabled"
-                ItemsSource="{x:Bind documents, Mode=OneWay}">
-                <ListView.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel 
-                            Background="Transparent" 
-                            Orientation="Horizontal" />
-                    </ItemsPanelTemplate>
-                </ListView.ItemsPanel>
-                <ListView.ItemTemplate>
-                    <DataTemplate x:DataType="local:DocItem">
-                        <StackPanel>
-                            <Image Source="{x:Bind Preview}"/>
-                            <TextBlock Text="{x:Bind Label}"/>
-                        </StackPanel>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
+                <StackPanel Grid.Column="1">
+                    <ListView HorizontalAlignment="Left" Height="200" VerticalAlignment="Top" Name="displayList_listview" Width="300" SelectionChanged="displayList_listview_SelectionChanged">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}" />
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                    <Button x:Name="findAndProject_button" FontFamily="Segoe UI Symbol" Click="LoadAndDisplayScreens_Click" Content="Find and select a display" />
+                </StackPanel>
+            </Grid>
+            
         </Grid>
     </Grid>
 </Page>

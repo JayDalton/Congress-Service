@@ -7,12 +7,14 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.Data.Pdf;
+using Windows.Devices.Enumeration;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Streams;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -257,6 +259,54 @@ namespace CongressClient
           await loadItemView(doc);
         }
       }
+    }
+
+    private async void LoadAndDisplayScreens_Click(object sender, RoutedEventArgs e)
+    {
+      try
+      {
+        // Use the device selector query of the ProjectionManager to list wired/wireless displays
+        String projectorSelectorQuery = ProjectionManager.GetDeviceSelector();
+
+        this.findAndProject_button.IsEnabled = false;
+
+        // Clear the list box
+        this.displayList_listview.Items.Clear();
+        this.displayList_listview.Visibility = Visibility.Visible;
+
+        Debug.WriteLine("Searching for devices...");
+
+        // Calling the device API to find devices based on the device query
+        var outputDevices = await DeviceInformation.FindAllAsync(projectorSelectorQuery);
+
+        // List found devices in the UI
+        for (int i = 0; i < outputDevices.Count; i++)
+        {
+          var device = outputDevices[i];
+          this.displayList_listview.Items.Add(device);
+        }
+
+        this.findAndProject_button.IsEnabled = true;
+        Debug.WriteLine("Found devices are now listed.");
+      }
+      catch (InvalidOperationException)
+      {
+        Debug.WriteLine("An error occured when querying and listing devices.");
+      }
+    }
+
+    private void displayList_listview_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+      // Get the DeviceInformation object of selected ListView item
+      ListView devicesList = (ListView)sender;
+      if (devicesList.SelectedItem != null)
+      {
+        DeviceInformation selectedDevice = (DeviceInformation)devicesList.SelectedItem;
+
+        // Start projecting to the selected display
+        //StartProjecting(selectedDevice);
+      }
+      this.displayList_listview.Visibility = Visibility.Collapsed;
     }
   }
 
